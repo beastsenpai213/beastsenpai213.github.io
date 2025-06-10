@@ -288,7 +288,7 @@
         <section class="container">
             <div class="viewer-container" id="demo">
                 <div class="viewer-header">
-                    <div class="viewer-title">3D 模型查看器</div>
+                    <div class="viewer-title">3D小草查看器</div>
                     <div class="status">
                         <div class="status-dot"></div>
                         <span id="status-text">准备就绪</span>
@@ -471,6 +471,7 @@
 
             loader.load(
                 getModelUrl(),
+                // "./models/grass4.glb",//debug
                 function(gltf) {
                     model = gltf.scene;
                     
