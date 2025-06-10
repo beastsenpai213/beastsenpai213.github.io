@@ -1,16 +1,639 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>doudou's blog page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D模型展示平台 - GitHub Pages托管演示</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #000000;
+            --secondary: #6b7280;
+            --background: #ffffff;
+            --surface: #f9fafb;
+            --border: #e5e7eb;
+            --accent: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--secondary);
+            background: var(--background);
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 1rem 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .hero {
+            padding: 6rem 0 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .viewer-container {
+            background: var(--surface);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .viewer-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .viewer-title {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .viewer-canvas {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+
+        .info-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .info-card h3 {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .file-tree {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+
+        .file-tree .folder {
+            color: #fbbf24;
+        }
+
+        .file-tree .file {
+            color: #10b981;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border);
+        }
+
+        .controls h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .controls p {
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .controls {
+                position: static;
+                margin-top: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>welcome to my blog!</h1>
-    
-</body>
-<body>
-	<a href="https://beastsenpai213.github.io/src" target="_blank">
-		<button type="button">GO TO PAGE1</button>
-	</a>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="#" class="logo">3D模型展示</a>
+                <ul class="nav-links">
+                    <li><a href="#demo" class="nav-link">演示</a></li>
+                    <li><a href="#structure" class="nav-link">文件结构</a></li>
+                    <li><a href="#deploy" class="nav-link">部署指南</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>GitHub Pages 3D模型托管演示</h1>
+                <p>展示如何使用 GitHub Pages 托管交互式 3D 模型，包括果冻形变效果和现代化界面设计</p>
+                <button class="btn-primary" onclick="loadModel()">加载 3D 模型</button>
+            </div>
+        </section>
+
+        <section class="container">
+            <div class="viewer-container" id="demo">
+                <div class="viewer-header">
+                    <div class="viewer-title">3D 模型查看器</div>
+                    <div class="status">
+                        <div class="status-dot"></div>
+                        <span id="status-text">准备就绪</span>
+                    </div>
+                </div>
+                <div class="viewer-canvas" id="viewer">
+                    <div class="loading" id="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>正在加载模型...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card" id="structure">
+                    <h3>📁 文件结构</h3>
+                    <p>GitHub Pages 项目的推荐文件结构：</p>
+                    <div class="file-tree">
+<span class="folder">your-username.github.io/</span> (或 your-repo-name/)
+├── <span class="file">index.html</span>          # 主页面
+├── <span class="file">README.md</span>           # 项目说明
+├── <span class="folder">models/</span>
+│   ├── <span class="file">grass.glb</span>       # 3D 模型文件
+│   ├── <span class="file">tree.glb</span>        # 其他模型
+│   └── <span class="file">rock.fbx</span>
+├── <span class="folder">assets/</span>
+│   ├── <span class="folder">images/</span>
+│   │   └── <span class="file">preview.jpg</span>
+│   ├── <span class="folder">css/</span>
+│   │   └── <span class="file">styles.css</span>   # 可选：外部样式
+│   └── <span class="folder">js/</span>
+│       └── <span class="file">main.js</span>      # 可选：外部JS
+└── <span class="file">_config.yml</span>         # GitHub Pages 配置
+                    </div>
+                </div>
+
+                <div class="info-card" id="deploy">
+                    <h3>🚀 部署步骤</h3>
+                    <ol style="padding-left: 1.5rem;">
+                        <li style="margin-bottom: 0.5rem;"><strong>创建仓库</strong><br>
+                            <code>username.github.io</code> 或普通仓库名</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>上传文件</strong><br>
+                            将所有文件推送到仓库</li>
+                        <li style="margin-bottom: 0.5rem;"><strong>启用 Pages</strong><br>
+                            设置 → Pages → 选择分支</li>
+                        <li><strong>访问网站</strong><br>
+                            <code>https://username.github.io/repo-name/</code></li>
+                    </ol>
+                </div>
+
+                <div class="info-card">
+                    <h3>⚡ 模型加载方式</h3>
+                    <p>三种常用的加载方式：</p>
+                    <br>
+                    <p><strong>1. GitHub Pages URL</strong></p>
+                    <code style="font-size: 0.8rem; background: var(--surface); padding: 0.25rem;">
+                        https://username.github.io/repo/models/grass.glb
+                    </code>
+                    <br><br>
+                    <p><strong>2. jsDelivr CDN</strong></p>
+                    <code style="font-size: 0.8rem; background: var(--surface); padding: 0.25rem;">
+                        https://cdn.jsdelivr.net/gh/user/repo@main/models/grass.glb
+                    </code>
+                    <br><br>
+                    <p><strong>3. GitHub Raw</strong></p>
+                    <code style="font-size: 0.8rem; background: var(--surface); padding: 0.25rem;">
+                        https://raw.githubusercontent.com/user/repo/main/models/grass.glb
+                    </code>
+                </div>
+
+                <div class="info-card">
+                    <h3>🎮 交互功能</h3>
+                    <ul style="padding-left: 1.5rem;">
+                        <li>左键拖拽：果冻形变效果</li>
+                        <li>右键拖拽：旋转视角</li>
+                        <li>滚轮：缩放模型</li>
+                        <li>自动弹性恢复</li>
+                        <li>响应式设计</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="controls">
+        <h4>操作说明</h4>
+        <p>左键：形变效果<br>
+           右键：旋转视角<br>
+           滚轮：缩放</p>
+    </div>
+
+    <script src="https://unpkg.com/three@0.139.2/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.139.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.139.2/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        let scene, camera, renderer, model, controls;
+        let originalVertices = [];
+        let isDragging = false;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let selectedPoint = null;
+
+        // 配置
+        const CONFIG = {
+            // 这里可以配置你的 GitHub 仓库信息
+            github: {
+                username: 'your-username',
+                repo: 'your-repo-name',
+                branch: 'main',
+                modelPath: 'models/grass.glb'
+            }
+        };
+
+        function getModelUrl() {
+            // 使用 jsDelivr CDN（推荐）
+            return `https://cdn.jsdelivr.net/gh/${CONFIG.github.username}/${CONFIG.github.repo}@${CONFIG.github.branch}/${CONFIG.github.modelPath}`;
+            
+            // 或者使用 GitHub Pages
+            // return `https://${CONFIG.github.username}.github.io/${CONFIG.github.repo}/${CONFIG.github.modelPath}`;
+        }
+
+        function init3D() {
+            const container = document.getElementById('viewer');
+            
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf9fafb);
+
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // 添加控制器
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.mouseButtons = {
+                LEFT: null,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.ROTATE
+            };
+
+            // 事件监听
+            renderer.domElement.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        function loadModel() {
+            const loading = document.getElementById('loading');
+            const statusText = document.getElementById('status-text');
+            
+            loading.style.display = 'block';
+            statusText.textContent = '加载中...';
+
+            // 创建一个简单的立方体作为演示（因为没有实际的模型文件）
+            createDemoModel();
+            
+            /* 实际加载模型的代码：
+            const loader = new THREE.GLTFLoader();
+            loader.load(
+                getModelUrl(),
+                function(gltf) {
+                    model = gltf.scene;
+                    
+                    // 自动调整模型
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 2 / maxDim;
+                    model.scale.multiplyScalar(scale);
+                    model.position.sub(center.multiplyScalar(scale));
+                    
+                    // 存储原始顶点
+                    storeOriginalVertices();
+                    
+                    scene.add(model);
+                    loading.style.display = 'none';
+                    statusText.textContent = '已就绪';
+                },
+                function(xhr) {
+                    const progress = (xhr.loaded / xhr.total * 100);
+                    statusText.textContent = `加载中 ${progress.toFixed(0)}%`;
+                },
+                function(error) {
+                    console.error('加载失败:', error);
+                    statusText.textContent = '加载失败';
+                    loading.style.display = 'none';
+                }
+            );
+            */
+        }
+
+        function createDemoModel() {
+            // 创建一个演示用的球体
+            const geometry = new THREE.SphereGeometry(1, 32, 32);
+            const material = new THREE.MeshLambertMaterial({
+                color: 0x3b82f6,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            model = new THREE.Mesh(geometry, material);
+            
+            // 存储原始顶点
+            originalVertices = geometry.attributes.position.array.slice();
+            
+            scene.add(model);
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('status-text').textContent = '演示模型已加载';
+        }
+
+        function onMouseDown(event) {
+            if (event.button !== 0) return;
+            
+            event.preventDefault();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            if (model) {
+                const intersects = raycaster.intersectObject(model, true);
+                if (intersects.length > 0) {
+                    isDragging = true;
+                    controls.enabled = false;
+                    selectedPoint = intersects[0].point.clone();
+                }
+            }
+        }
+
+        function onMouseMove(event) {
+            if (!isDragging || !selectedPoint) return;
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const planeNormal = camera.getWorldDirection(new THREE.Vector3());
+            const plane = new THREE.Plane(planeNormal, -selectedPoint.dot(planeNormal));
+            const intersectPoint = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, intersectPoint);
+
+            if (model && model.geometry) {
+                const geometry = model.geometry;
+                const positions = geometry.attributes.position.array;
+
+                for (let i = 0; i < positions.length; i += 3) {
+                    const vertex = new THREE.Vector3(
+                        originalVertices[i],
+                        originalVertices[i + 1],
+                        originalVertices[i + 2]
+                    );
+
+                    const distance = selectedPoint.distanceTo(vertex);
+                    const influence = Math.max(0, 1 - distance / 2);
+                    const displacement = intersectPoint.clone()
+                        .sub(selectedPoint)
+                        .multiplyScalar(influence * 0.3);
+
+                    positions[i] = originalVertices[i] + displacement.x;
+                    positions[i + 1] = originalVertices[i + 1] + displacement.y;
+                    positions[i + 2] = originalVertices[i + 2] + displacement.z;
+                }
+
+                geometry.attributes.position.needsUpdate = true;
+            }
+        }
+
+        function onMouseUp(event) {
+            if (event.button !== 0) return;
+            if (!isDragging) return;
+            
+            isDragging = false;
+            controls.enabled = true;
+
+            // 弹性恢复动画
+            if (model && model.geometry) {
+                const duration = 1000;
+                const startTime = Date.now();
+
+                function recoverAnimate() {
+                    const progress = Math.min((Date.now() - startTime) / duration, 1);
+                    const easing = 1 - Math.pow(1 - progress, 3);
+
+                    const geometry = model.geometry;
+                    const positions = geometry.attributes.position.array;
+
+                    for (let i = 0; i < positions.length; i += 3) {
+                        positions[i] = originalVertices[i] + (positions[i] - originalVertices[i]) * (1 - easing);
+                        positions[i + 1] = originalVertices[i + 1] + (positions[i + 1] - originalVertices[i + 1]) * (1 - easing);
+                        positions[i + 2] = originalVertices[i + 2] + (positions[i + 2] - originalVertices[i + 2]) * (1 - easing);
+                    }
+
+                    geometry.attributes.position.needsUpdate = true;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(recoverAnimate);
+                    }
+                }
+
+                recoverAnimate();
+            }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('viewer');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            init3D();
+        });
+    </script>
 </body>
 </html>
 
