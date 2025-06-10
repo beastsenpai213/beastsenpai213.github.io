@@ -382,7 +382,9 @@
 
     <script src="https://unpkg.com/three@0.139.2/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.139.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.139.2/examples/js/loaders/DRACOLoader.js"></script>
     <script src="https://unpkg.com/three@0.139.2/examples/js/controls/OrbitControls.js"></script>
+    
 
     <script>
         let scene, camera, renderer, model, controls;
@@ -394,21 +396,17 @@
 
         // 配置
         const CONFIG = {
-            // 这里可以配置你的 GitHub 仓库信息
             github: {
-                username: 'beastsenpai213',
-                repo: 'your-repo-name',
+                username: 'your-username',
+                repo: 'your-repo-name', 
                 branch: 'main',
                 modelPath: 'models/grass.glb'
             }
         };
 
         function getModelUrl() {
-            // 使用 jsDelivr CDN（推荐）
-            //return `https://cdn.jsdelivr.net/gh/${CONFIG.github.username}/${CONFIG.github.repo}@${CONFIG.github.branch}/${CONFIG.github.modelPath}`;
-            
-            // 或者使用 GitHub Pages /${CONFIG.github.repo}
-             return `https://${CONFIG.github.username}.github.io/${CONFIG.github.username}.github.io/${CONFIG.github.modelPath}`;
+            // 使用你的实际 GitHub 配置
+            return `https://beastsenpai213.github.io/models/grass.glb`;
         }
 
         function init3D() {
@@ -434,7 +432,6 @@
 
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(5, 5, 5);
-            directionalLight.castShadow = true;
             scene.add(directionalLight);
 
             // 添加控制器
@@ -463,17 +460,21 @@
             loading.style.display = 'block';
             statusText.textContent = '加载中...';
 
-            // 创建一个简单的立方体作为演示（因为没有实际的模型文件）
-            //createDemoModel();
-            
-            /* 实际加载模型的代码：*/
+            // 设置 Draco 解码器
+            const dracoLoader = new THREE.DRACOLoader();
+            dracoLoader.setDecoderPath('https://unpkg.com/three@0.139.2/examples/js/libs/draco/');
+            dracoLoader.setDecoderConfig({ type: 'js' });
+
+            // 设置 GLTF 加载器
             const loader = new THREE.GLTFLoader();
+            loader.setDRACOLoader(dracoLoader);
+
             loader.load(
                 getModelUrl(),
                 function(gltf) {
                     model = gltf.scene;
                     
-                    // 自动调整模型
+                    // 自动调整模型大小和位置
                     const box = new THREE.Box3().setFromObject(model);
                     const center = box.getCenter(new THREE.Vector3());
                     const size = box.getSize(new THREE.Vector3());
@@ -483,28 +484,42 @@
                     model.scale.multiplyScalar(scale);
                     model.position.sub(center.multiplyScalar(scale));
                     
-                    // 存储原始顶点
-                    storeOriginalVertices();
+                    // 存储原始顶点数据
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            const geometry = child.geometry;
+                            if (geometry.attributes.position) {
+                                // 为每个网格存储原始顶点
+                                child.userData.originalVertices = geometry.attributes.position.array.slice();
+                            }
+                        }
+                    });
                     
                     scene.add(model);
                     loading.style.display = 'none';
-                    statusText.textContent = '已就绪';
+                    statusText.textContent = '模型加载完成';
+                    
+                    console.log('模型加载成功:', model);
                 },
                 function(xhr) {
-                    const progress = (xhr.loaded / xhr.total * 100);
-                    statusText.textContent = `加载中 ${progress.toFixed(0)}%`;
+                    if (xhr.lengthComputable) {
+                        const progress = (xhr.loaded / xhr.total * 100);
+                        statusText.textContent = `加载中 ${progress.toFixed(0)}%`;
+                    }
                 },
                 function(error) {
-                    console.error('加载失败:', error);
-                    statusText.textContent = '加载失败';
+                    console.error('模型加载失败:', error);
+                    statusText.textContent = '加载失败，使用演示模型';
                     loading.style.display = 'none';
+                    
+                    // 如果加载失败，创建演示模型
+                    createDemoModel();
                 }
             );
-            
         }
 
         function createDemoModel() {
-            // 创建一个演示用的球体
+            // 创建演示模型
             const geometry = new THREE.SphereGeometry(1, 32, 32);
             const material = new THREE.MeshLambertMaterial({
                 color: 0x3b82f6,
@@ -513,13 +528,10 @@
             });
             
             model = new THREE.Mesh(geometry, material);
-            
-            // 存储原始顶点
-            originalVertices = geometry.attributes.position.array.slice();
+            model.userData.originalVertices = geometry.attributes.position.array.slice();
             
             scene.add(model);
             
-            document.getElementById('loading').style.display = 'none';
             document.getElementById('status-text').textContent = '演示模型已加载';
         }
 
@@ -527,8 +539,10 @@
             if (event.button !== 0) return;
             
             event.preventDefault();
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
 
@@ -538,6 +552,7 @@
                     isDragging = true;
                     controls.enabled = false;
                     selectedPoint = intersects[0].point.clone();
+                    console.log('开始拖拽形变');
                 }
             }
         }
@@ -545,8 +560,9 @@
         function onMouseMove(event) {
             if (!isDragging || !selectedPoint) return;
 
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
             const planeNormal = camera.getWorldDirection(new THREE.Vector3());
@@ -554,29 +570,38 @@
             const intersectPoint = new THREE.Vector3();
             raycaster.ray.intersectPlane(plane, intersectPoint);
 
-            if (model && model.geometry) {
-                const geometry = model.geometry;
-                const positions = geometry.attributes.position.array;
+            // 应用形变效果
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh && child.userData.originalVertices) {
+                        const geometry = child.geometry;
+                        const positions = geometry.attributes.position.array;
+                        const originalVertices = child.userData.originalVertices;
 
-                for (let i = 0; i < positions.length; i += 3) {
-                    const vertex = new THREE.Vector3(
-                        originalVertices[i],
-                        originalVertices[i + 1],
-                        originalVertices[i + 2]
-                    );
+                        for (let i = 0; i < positions.length; i += 3) {
+                            const vertex = new THREE.Vector3(
+                                originalVertices[i],
+                                originalVertices[i + 1],
+                                originalVertices[i + 2]
+                            );
 
-                    const distance = selectedPoint.distanceTo(vertex);
-                    const influence = Math.max(0, 1 - distance / 2);
-                    const displacement = intersectPoint.clone()
-                        .sub(selectedPoint)
-                        .multiplyScalar(influence * 0.3);
+                            // 转换到世界坐标
+                            vertex.applyMatrix4(child.matrixWorld);
 
-                    positions[i] = originalVertices[i] + displacement.x;
-                    positions[i + 1] = originalVertices[i + 1] + displacement.y;
-                    positions[i + 2] = originalVertices[i + 2] + displacement.z;
-                }
+                            const distance = selectedPoint.distanceTo(vertex);
+                            const influence = Math.max(0, 1 - distance / 2);
+                            const displacement = intersectPoint.clone()
+                                .sub(selectedPoint)
+                                .multiplyScalar(influence * 0.3);
 
-                geometry.attributes.position.needsUpdate = true;
+                            positions[i] = originalVertices[i] + displacement.x;
+                            positions[i + 1] = originalVertices[i + 1] + displacement.y;
+                            positions[i + 2] = originalVertices[i + 2] + displacement.z;
+                        }
+
+                        geometry.attributes.position.needsUpdate = true;
+                    }
+                });
             }
         }
 
@@ -586,9 +611,10 @@
             
             isDragging = false;
             controls.enabled = true;
+            console.log('结束拖拽，开始恢复动画');
 
             // 弹性恢复动画
-            if (model && model.geometry) {
+            if (model) {
                 const duration = 1000;
                 const startTime = Date.now();
 
@@ -596,16 +622,21 @@
                     const progress = Math.min((Date.now() - startTime) / duration, 1);
                     const easing = 1 - Math.pow(1 - progress, 3);
 
-                    const geometry = model.geometry;
-                    const positions = geometry.attributes.position.array;
+                    model.traverse((child) => {
+                        if (child.isMesh && child.userData.originalVertices) {
+                            const geometry = child.geometry;
+                            const positions = geometry.attributes.position.array;
+                            const originalVertices = child.userData.originalVertices;
 
-                    for (let i = 0; i < positions.length; i += 3) {
-                        positions[i] = originalVertices[i] + (positions[i] - originalVertices[i]) * (1 - easing);
-                        positions[i + 1] = originalVertices[i + 1] + (positions[i + 1] - originalVertices[i + 1]) * (1 - easing);
-                        positions[i + 2] = originalVertices[i + 2] + (positions[i + 2] - originalVertices[i + 2]) * (1 - easing);
-                    }
+                            for (let i = 0; i < positions.length; i += 3) {
+                                positions[i] = originalVertices[i] + (positions[i] - originalVertices[i]) * (1 - easing);
+                                positions[i + 1] = originalVertices[i + 1] + (positions[i + 1] - originalVertices[i + 1]) * (1 - easing);
+                                positions[i + 2] = originalVertices[i + 2] + (positions[i + 2] - originalVertices[i + 2]) * (1 - easing);
+                            }
 
-                    geometry.attributes.position.needsUpdate = true;
+                            geometry.attributes.position.needsUpdate = true;
+                        }
+                    });
 
                     if (progress < 1) {
                         requestAnimationFrame(recoverAnimate);
