@@ -266,12 +266,12 @@
     <header class="header">
         <div class="container">
             <nav class="nav">
-                <a href="#" class="logo">3D模型展示</a>
-                <ul class="nav-links">
+                <a href="#" class="logo">Q弹软嫩のkawaii小草</a>
+                <!-- <ul class="nav-links">
                     <li><a href="#demo" class="nav-link">演示</a></li>
                     <li><a href="#structure" class="nav-link">文件结构</a></li>
                     <li><a href="#deploy" class="nav-link">部署指南</a></li>
-                </ul>
+                </ul> -->
             </nav>
         </div>
     </header>
@@ -279,8 +279,8 @@
     <main>
         <section class="hero">
             <div class="container">
-                <h1>GitHub Pages 3D模型托管演示</h1>
-                <p>展示如何使用 GitHub Pages 托管交互式 3D 模型，包括果冻形变效果和现代化界面设计</p>
+                <h1>Q弹软嫩のkawaii小草</h1>
+                <p>By doudou (with powerful AI)</p>
                 <button class="btn-primary" onclick="loadModel()">加载 3D 模型</button>
             </div>
         </section>
@@ -302,7 +302,7 @@
                 </div>
             </div>
 
-            <div class="info-grid">
+            <!-- <div class="info-grid">
                 <div class="info-card" id="structure">
                     <h3>📁 文件结构</h3>
                     <p>GitHub Pages 项目的推荐文件结构：</p>
@@ -323,9 +323,9 @@
 │       └── <span class="file">main.js</span>      # 可选：外部JS
 └── <span class="file">_config.yml</span>         # GitHub Pages 配置
                     </div>
-                </div>
+                </div> -->
 
-                <div class="info-card" id="deploy">
+                <!-- <div class="info-card" id="deploy">
                     <h3>🚀 部署步骤</h3>
                     <ol style="padding-left: 1.5rem;">
                         <li style="margin-bottom: 0.5rem;"><strong>创建仓库</strong><br>
@@ -337,9 +337,9 @@
                         <li><strong>访问网站</strong><br>
                             <code>https://username.github.io/repo-name/</code></li>
                     </ol>
-                </div>
+                </div> -->
 
-                <div class="info-card">
+                <!-- <div class="info-card">
                     <h3>⚡ 模型加载方式</h3>
                     <p>三种常用的加载方式：</p>
                     <br>
@@ -357,7 +357,7 @@
                     <code style="font-size: 0.8rem; background: var(--surface); padding: 0.25rem;">
                         https://raw.githubusercontent.com/user/repo/main/models/grass.glb
                     </code>
-                </div>
+                </div> -->
 
                 <div class="info-card">
                     <h3>🎮 交互功能</h3>
@@ -396,7 +396,7 @@
         const CONFIG = {
             // 这里可以配置你的 GitHub 仓库信息
             github: {
-                username: 'your-username',
+                username: 'beastsenpai213',
                 repo: 'your-repo-name',
                 branch: 'main',
                 modelPath: 'models/grass.glb'
@@ -405,10 +405,10 @@
 
         function getModelUrl() {
             // 使用 jsDelivr CDN（推荐）
-            return `https://cdn.jsdelivr.net/gh/${CONFIG.github.username}/${CONFIG.github.repo}@${CONFIG.github.branch}/${CONFIG.github.modelPath}`;
+            //return `https://cdn.jsdelivr.net/gh/${CONFIG.github.username}/${CONFIG.github.repo}@${CONFIG.github.branch}/${CONFIG.github.modelPath}`;
             
-            // 或者使用 GitHub Pages
-            // return `https://${CONFIG.github.username}.github.io/${CONFIG.github.repo}/${CONFIG.github.modelPath}`;
+            // 或者使用 GitHub Pages /${CONFIG.github.repo}
+             return `https://${CONFIG.github.username}.github.io/${CONFIG.github.modelPath}`;
         }
 
         function init3D() {
@@ -464,9 +464,9 @@
             statusText.textContent = '加载中...';
 
             // 创建一个简单的立方体作为演示（因为没有实际的模型文件）
-            createDemoModel();
+            //createDemoModel();
             
-            /* 实际加载模型的代码：
+            /* 实际加载模型的代码：*/
             const loader = new THREE.GLTFLoader();
             loader.load(
                 getModelUrl(),
@@ -500,7 +500,7 @@
                     loading.style.display = 'none';
                 }
             );
-            */
+            
         }
 
         function createDemoModel() {
